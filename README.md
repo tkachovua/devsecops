@@ -2,12 +2,12 @@
 # Install
 
 
-1. Install `gitleaks` locally:
+1. Install `gitleaks` locally for Ubuntu:
    ```
    $wget https://github.com/gitleaks/gitleaks/releases/download/v8.17.0/gitleaks_8.17.0_linux_x64.tar.gz
    $tar xvzf gitleaks_8.17.0_linux_x64.tar.gz
-   $ chmod +x gitleaks
-   $ sudo mv gitleaks /usr/bin
+   $chmod +x gitleaks
+   $sudo mv gitleaks /usr/bin
    ```
    
 2. Install the `pre-commit` hook script:

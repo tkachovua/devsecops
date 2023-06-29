@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Запустити gitleaks для перевірки комітів
+gitleaks detect --source . --verbose --redact
+
+# Перевірити результат виконання gitleaks
+if [ $? -ne 0 ]; then
+    echo "Виявлено проблеми безпеки в коміті. Відхилення коміту."
+    exit 1
+fi
+
+exit 0

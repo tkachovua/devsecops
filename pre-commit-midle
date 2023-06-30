@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+
+import os
+import platform
+import subprocess
+import shutil
+import sys
+import urllib.request
+import tarfile
+import zipfile
+
+GITLEAKS_VERSION = "8.17.0"
+GITLEAKS_DOWNLOAD_URL = "https://github.com/zricethezav/gitleaks/releases/download/v{}/gitleaks_{}_{}_{}.{}"
+
+def install_gitleaks():
+    # Визначаємо поточну операційну систему та архітектуру
+    os_name = platform.system().lower()
+    os_arch = platform.machine().lower()
+    if os_arch == "x86_64":
+        os_arch = "x64"
+
+    # Формуємо URL для завантаження відповідного архіву Gitleaks
+    download_url = GITLEAKS_DOWNLOAD_URL.format(GITLEAKS_VERSION, "windows" if os_name == "windows" else GITLEAKS_VERSION, os_name, os_arch, "zip" if os_name == "windows" else "tar.gz")
+    # Створюємо тимчасовий каталог для розпакування архіву
+    tmp_dir = os.path.join(os.getcwd(), "gitleaks_tmp")
+    os.makedirs(tmp_dir, exist_ok=True)
+
+    # Завантажуємо архів Gitleaks
+    archive_path = os.path.join(tmp_dir, "gitleaks.{}".format("zip" if os_name == "windows" else "tar.gz"))
+    urllib.request.urlretrieve(download_url, archive_path)
+
+    # Розпаковуємо архів Gitleaks
+    if os_name == "windows":
+        with zipfile.ZipFile(archive_path, 'r') as zip_ref:
+            zip_ref.extractall(tmp_dir)
+    else:
+        with tarfile.open(archive_path, 'r:gz') as tar_ref:
+            tar_ref.extractall(tmp_dir)
+
+    # Переміщуємо виконуваний файл Gitleaks у каталог, який знаходиться в $PATH
+    gitleaks_dir = os.path.join(tmp_dir, "gitleaks")
+    os.makedirs(os.path.expanduser("~/.gitleaks/bin"), exist_ok=True)
+    os.chmod(gitleaks_dir, 0o755)
+    os.rename(gitleaks_dir, os.path.expanduser("~/.gitleaks/bin/gitleaks"))
+
+    # Видаляємо тимчасовий каталог
+    shutil.rmtree(tmp_dir)
+
+def main():
+    # Отримуємо значення опції enable з git config
+    result = subprocess.run(['git', 'config', '--bool', 'hooks.gitleaks.enable'], capture_output=True, text=True)
+    enable = result.stdout.strip()
+
+    if enable == "true":
+        # Перевіряємо наявність gitleaks
+        result = subprocess.run(['gitleaks', 'version'], capture_output=True, text=True)
+        if result.returncode != 0:
+            print("Gitleaks not found. Installing...")
+            install_gitleaks()
+
+            # Перевіряємо, чи шлях до gitleaks доданий в PATH
+            gitleaks_bin_dir = os.path.expanduser("~/.gitleaks/bin")
+            if gitleaks_bin_dir not in os.environ.get("PATH", "").split(os.pathsep):
+                print("")
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("The path to Gitleaks is not added to $PATH.")
+                print("To add it, you can run the following command:")
+                print(f'export PATH="{gitleaks_bin_dir}:$PATH"')
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("")
+        else:        
+            # Запускаємо gitleaks
+            subprocess.run(['gitleaks', 'detect', '--source', '.', '--verbose', '--redact'])
+            
+    else:
+        print("Gitleaks pre-commit hook is disabled")
+
+if __name__ == "__main__":
+    main()

@@ -52,10 +52,6 @@ def main():
     enable = result.stdout.strip()
 
     if enable == "true":
-        # Перевіряємо наявність gitleaks
-        result = subprocess.run(['gitleaks', 'version'], capture_output=True, text=True)
-        if result.returncode != 0:
-            print("Gitleaks not found. Installing...")
             install_gitleaks()
 
             # Перевіряємо, чи шлях до gitleaks доданий в PATH
@@ -68,9 +64,9 @@ def main():
                 print(f'export PATH="{gitleaks_bin_dir}:$PATH"')
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 print("")
-        else:        
-            # Запускаємо gitleaks
-            subprocess.run(['gitleaks', 'detect', '--source', '.', '--verbose', '--redact'])
+            else:        
+                # Запускаємо gitleaks
+                subprocess.run(['gitleaks', 'detect', '--source', '.', '--verbose', '--redact'])
             
     else:
         print("Gitleaks pre-commit hook is disabled")

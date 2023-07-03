@@ -52,6 +52,11 @@ def main():
     enable = result.stdout.strip()
 
     if enable == "true":
+        # Перевіряємо чи встановлен gitleaks
+        try:
+            subprocess.run(['gitleaks', 'version'], capture_output=True, text=True, check=True)
+        except FileNotFoundError:
+            print("Gitleaks not found. Installing...")
             install_gitleaks()
 
             # Перевіряємо, чи шлях до gitleaks доданий в PATH

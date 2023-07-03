@@ -74,7 +74,7 @@ def main():
                 subprocess.run(['gitleaks', 'detect', '--source', '.', '--verbose', '--redact'])
             
     else:
-        print("Gitleaks pre-commit hook is disabled")
+        print("Gitleaks pre-commit hook is disabled. To enable, enter the command: "git config hooks.gitleaks-enable true".")
 
 if __name__ == "__main__":
     main()
